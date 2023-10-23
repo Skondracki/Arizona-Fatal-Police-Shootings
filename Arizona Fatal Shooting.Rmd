@@ -1,0 +1,375 @@
+---
+title: "Arizona Fatal Shootings"
+output: html_document
+date: "2023-08-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+## load libraries
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+## load data
+shooting.df <-read.csv("~/Documents/Stats Seminar/fatal-police-shootings-data.csv", header=TRUE) 
+summary(shooting.df)
+head(shooting.df)
+```
+```{r}
+gun_incidents <- shooting.df %>%
+  filter(armed_with == "gun")
+ggplot(gun_incidents) +
+  aes(x = state, fill = state) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+
+```{r}
+states_by_region <- data.frame(
+  state = c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"),
+  region = c("Southeast", "West", "Southwest", "Southeast", "West", "West", "Northeast", "Northeast", "Southeast", "Southeast", "West", "West", "Midwest", "Midwest", "Midwest", "Midwest", "Southeast", "Southeast", "Northeast", "Northeast", "Northeast", "Midwest", "Midwest", "Southeast", "Midwest", "West", "Midwest", "West", "Northeast", "Northeast", "Southwest", "Northeast", "Southeast", "Midwest", "Midwest", "Southwest", "West", "Northeast", "Northeast", "Southeast", "Midwest", "Southeast", "Southwest", "West", "Northeast", "Southeast", "West", "Southeast","Midwest", "West"))
+
+gun_incidents_with_regions <- gun_incidents %>%
+  left_join(states_by_region, by = c("state" = "state"))
+
+table(states_by_region$region)
+
+```
+
+```{r}
+
+
+ggplot(gun_incidents_with_regions) +
+  aes(x = region, fill = region) + 
+  geom_bar() +
+  labs(title = "Distribution of Police Shootings Involving Armed Victims by Region", x = "State", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+gun_incidents_southeast <- gun_incidents_with_regions %>%
+  filter(region == "Southeast")
+ggplot(gun_incidents_southeast) +
+  aes(x = state, fill = state) + 
+  geom_bar() +
+  labs(title = "Distribution of Police Shootings Involving Armed Victims in the Southeast by State", x = "State", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+gun_incidents_west <- gun_incidents_with_regions %>%
+  filter(region == "West")
+ggplot(gun_incidents_west) +
+  aes(x = state, fill = state) + 
+  geom_bar() +
+  labs(title = "Distribution of Police Shootings Involving Armed Victims in the West by State", x = "State", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+gun_incidents_southwest <- gun_incidents_with_regions %>%
+  filter(region == "Southwest")
+ggplot(gun_incidents_southwest) +
+  aes(x = state, fill = state) + 
+  geom_bar() +
+  labs(title = "Distribution of Police Shootings Involving Armed Victims in the Southwest by State", x = "State", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+gun_incidents_northeast <- gun_incidents_with_regions %>%
+  filter(region == "Northeast")
+ggplot(gun_incidents_northeast) +
+  aes(x = state, fill = state) + 
+  geom_bar() +
+  labs(title = "Distribution of Police Shootings Involving Armed Victims in the Northeast by State", x = "State", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+gun_incidents_midwest <- gun_incidents_with_regions %>%
+  filter(region == "Midwest")
+ggplot(gun_incidents_midwest) +
+  aes(x = state, fill = state) + 
+  geom_bar() +
+  labs(title = "Distribution of Police Shootings Involving Armed Victims in the Midwest by State", x = "State", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(gun_incidents_southwest) +
+  aes(x = date, y = state)
+  geom_point()
+
+```
+
+
+```{r}
+#Clean the data
+shootings_cleaned <- subset(shooting.df, age!="NA" & gender == "male" & race %in% c("A", "H", "B", "W"))
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+arizona_shootings_cleaned <- subset(shooting.df, age!="NA" & gender == "male" & race %in% c("A", "H", "B", "W") & state == "AZ")
+arizona_pop <-read.csv("~/Documents/Stats Seminar/Arizona Population Data.csv", header=TRUE) 
+arizona_pop
+```
+
+
+
+```{r}
+library(lubridate)
+
+# Create a new empty column named 'year'
+arizona_shootings_cleaned$year <- NA
+
+# Populate the 'year' column with extracted year values
+for (i in 1:nrow(arizona_shootings_cleaned)) {
+  specific_date <- arizona_shootings_cleaned$date[i]
+  
+  if (!is.na(specific_date)) {
+    year <- year(specific_date)  # Extract year using lubridate
+    arizona_shootings_cleaned$year[i] <- year
+  }
+}
+```
+
+
+```{r}
+# Loop through each row in the shootings dataframe
+for (i in 1:nrow(arizona_shootings_cleaned)) {
+  year <- arizona_shootings_cleaned$year[i]  # Extract the year from the shootings dataframe
+  
+  # Match the year to the corresponding row in the population dataframe
+  matched_row <- arizona_pop[arizona_pop$Year == year, ]
+  
+  # If a match is found, assign the population value to the 'population' column in the shootings dataframe
+  if (nrow(matched_row) > 0) {
+    arizona_shootings_cleaned$population[i] <- matched_row$Population
+  }
+}
+
+# Print the updated shootings dataframe
+arizona_shootings_cleaned <- subset(arizona_shootings_cleaned, year!= "2023")
+print(arizona_shootings_cleaned)
+```
+```{r}
+arizona_pop
+value_counts <- table(arizona_shootings_cleaned$year)
+arizona_pop$shooting_count <- value_counts
+arizona_pop$Population <- as.numeric(gsub(",", "", arizona_pop$Population))
+arizona_pop
+rate <- c(arizona_pop$Population / arizona_pop$shooting_count)
+rate
+
+#city_counts.df <- table(arizona_shootings_cleaned$city)
+#city_counts
+
+
+```
+```{r}
+ggplot(arizona_shootings_cleaned, aes(x = city)) + 
+  geom_bar(fill = 'skyblue') + 
+  labs(title = "Shootings by City in Arizona", 
+       x = "City",
+       y = "Count") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
+
+print(arizona_shootings_cleaned %>%
+  count(city))
+```
+
+```{r}
+top_4 <- arizona_shootings_cleaned %>%
+  count(city) %>%
+  filter(n >= 15)
+
+ggplot(top_4, aes(x = reorder(city, -n), y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "City", y = "Number of Shootings") +
+  ggtitle("Top 4 Cities in Arizona with Shootings")
+```
+
+```{r}
+# Assuming your dataframe is called 'arizona_shootings', and you have a 'year' column representing the year of shootings
+# Filter for shootings from 2016 to 2021 and select the top 4 cities
+filtered_data <- arizona_shootings_cleaned %>%
+  filter(year >= 2016 & year <= 2022 & city %in% c("Phoenix", "Tucson", "Mesa", "Glendale")) %>%
+  group_by(city, year) %>%
+  summarize(count = n())
+
+# Create a line plot
+ggplot(filtered_data, aes(x = year, y = count, color = city, group = city)) +
+  geom_line() +
+  labs(x = "Year", y = "Number of Shootings") +
+  ggtitle("Trend of Shootings in Top 4 Cities in Arizona (2016-2021)") +
+  scale_color_brewer(palette = "Set1") +  # Choose a color palette
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for better readability
+
+```
+
+```{r}
+# Assuming your dataframe is called 'arizona_shootings' and you have a 'year' column representing the year of shootings
+# Filter for shootings in the top 4 cities
+filtered_data <- arizona_shootings_cleaned %>%
+  filter(city %in% c("Phoenix", "Tucson", "Mesa", "Glendale")) %>%
+  group_by(city, race) %>%
+  summarize(count = n())
+
+# Create a bar plot
+ggplot(filtered_data, aes(x = city, y = count, fill = race)) +
+  geom_bar(stat = "identity") +
+  labs(x = "City", y = "Number of Shootings") +
+  ggtitle("Number of Shootings by Race in Top 4 Cities in Arizona") +
+  scale_fill_brewer(palette = "Set3") +  # Choose a color palette
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for better readability
+```
+
+
+
+```{r}
+phoenix_data <- arizona_shootings_cleaned %>%
+  filter(year >= 2016 & year <= 2022 & city == "Phoenix") %>%
+  group_by(year, race) %>%
+  summarize(count = n())
+
+median_income <- c("","","","","","","","", 50757,50757,50757, 54907,54907,54907, 58308,58308,58308, "","","")
+phoenix_data$median_income <- median_income
+phoenix_data$shooting_count <- phoenix_data$count
+phoenix_data$count <- NULL
+
+
+arrests.df <-read.csv("~/Documents/Stats Seminar/arrests_adult-arrests-details_arrestdetail.csv", header=TRUE) 
+
+arrests_simple.df <- arrests.df[, c("YEAR", "SIMPLE_SUBJ_RE_GRP", "P2DRUG_CHARGES")]
+arrests_simple.df <- arrests_simple.df %>%
+  filter(SIMPLE_SUBJ_RE_GRP %in% c("Hispanic", "Black", "White") & YEAR != 2023 )
+
+arrests_simple.df$P2DRUG_CHARGES <- arrests_simple.df$P2DRUG_CHARGES >0
+arrests_clean.df <- arrests_simple.df %>%
+  group_by(YEAR, SIMPLE_SUBJ_RE_GRP, P2DRUG_CHARGES) %>%
+  summarize(count = n())
+arrests_clean.df$race <- arrests_clean.df$SIMPLE_SUBJ_RE_GRP
+arrests_clean.df$SIMPLE_SUBJ_RE_GRP <- NULL
+arrests_clean.df
+
+total_counts <- arrests_simple.df %>%
+  group_by(YEAR, SIMPLE_SUBJ_RE_GRP) %>%
+  summarize(count = n())
+total_counts$race <- total_counts$SIMPLE_SUBJ_RE_GRP
+total_counts$SIMPLE_SUBJ_RE_GRP <- NULL
+
+# Assuming your dataframe is called 'your_dataframe'
+total_counts <- total_counts %>%
+  mutate(race0 = case_when(
+    race == "Black" ~ "B",
+    race == "Hispanic" ~ "H",
+    race == "White" ~ "W",
+    TRUE ~ race  # If none of the above conditions match, keep the original value
+  ))
+total_counts$race <- NULL
+total_counts$race <- total_counts$race0
+total_counts$race0 <- NULL
+total_counts$arrest_count <- total_counts$count
+total_counts$count <- NULL
+total_counts$year <- total_counts$YEAR
+total_counts$YEAR <- NULL
+total_counts
+phoenix_data
+
+# Perform a full join
+combined_df <- full_join(total_counts, phoenix_data, by = c("year", "race"))
+
+# Fill missing values with 0
+combined_df[is.na(combined_df)] <- 0
+combined_df
+
+#rearrange columns with year as first column and in order
+combined_df <- combined_df %>%
+  select(year, everything())
+combined_df <- combined_df %>%
+  arrange(year)
+combined_df_clean <- combined_df %>%
+  filter(year >= 2018 & year <= 2022)
+combined_df_clean
+```
+```{r}
+ggplot(data = combined_df_clean,aes(x = year, y = (shooting_count/arrest_count) *100)) +
+  geom_line(stat = "identity", position = "stack") +
+  aes(colour = race) +
+  labs(
+    title = "Percentage of Shootings by Race as a Proportion of Arrests (2018-2022)",
+    x = "Year",
+    y = "Arrest Count"
+  ) +
+  scale_fill_manual(values = c("red", "blue", "green")) +
+  theme_minimal()
+
+
+
+# Create a bar plot
+ggplot(arrests_clean.df, aes(x = race, y = count, fill = P2DRUG_CHARGES)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Race", y = "Count") +
+  ggtitle("Counts of Charges by Race (Drug-Related vs. Non-Drug-Related)") +
+  scale_fill_discrete(name = "Drug Related") +
+  theme_minimal() +
+  facet_wrap(~YEAR, scales = "free_x")
+```
+```{r}
+# Create the top_5 dataframe
+top_5 <- data.frame(
+  cities = c("Los Angeles", "Miami", "Atlanta", "Houston", "Phoenix"),
+  per_capita_income_ranked = c(19, 21, 77, 62, 126),
+  state_drug_crime_rating = c("D-", "D+", "D", "D-", "F"),
+  city_drug_crime_rating = c("D-", "D+", "F", "C-", "D+"),
+  city_overall_crime_rating = c("D-", "F", "C-", "C-", "F"),
+  state_overall_crime_rating = c("D-", "C", "C+", "C", "F")
+)
+
+# Print the dataframe
+print(top_5)
+```
+ 
+```{r}
+# Assuming your dataframe is named top_5
+# Define the levels for city_drug_crime_rating in reverse order
+possible_grades <- c("F", "D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A", "A+")
+top_5$city_drug_crime_rating <- factor(top_5$city_drug_crime_rating, levels = rev(possible_grades))
+
+# Define the levels for state_overall_crime_rating in reverse order
+state_overall_grades <- c("F", "D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A", "A+")
+top_5$state_overall_crime_rating <- factor(top_5$state_overall_crime_rating, levels = state_overall_grades)
+
+# Create a scatterplot
+ggplot(top_5, aes(x = reorder(city_drug_crime_rating, -as.numeric(city_drug_crime_rating)), y = state_overall_crime_rating, color = cities)) +
+  geom_point(size = 3) +
+  labs(x = "City Drug Crime Rating", y = "State Overall Crime Rating", color = "Cities") +
+  scale_color_manual(values = c("Los Angeles" = "red", "Miami" = "blue", "Atlanta" = "green", "Houston" = "purple", "Phoenix" = "orange")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("City Drug Crime Rating vs. State Overall Crime Rating for Top 5 Cities")
+```
+```{r}
+# Assuming your dataframe is named top_5
+# Define the levels for city_drug_crime_rating in reverse order
+possible_grades <- c("F", "D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A", "A+")
+top_5$city_drug_crime_rating <- factor(top_5$city_drug_crime_rating, levels = rev(possible_grades))
+
+# Define the levels for state_overall_crime_rating in reverse order
+state_overall_grades <- c("F", "D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A", "A+")
+top_5$state_overall_crime_rating <- factor(top_5$state_overall_crime_rating, levels = state_overall_grades)
+
+# Create a scatterplot
+ggplot(top_5, aes(x = reorder(city_drug_crime_rating, -as.numeric(city_drug_crime_rating)), y = per_capita_income_ranked, color = cities)) +
+  geom_point(size = 3) +
+  labs(x = "City Drug Crime Rating", y = "Per Capita Income Ranking", color = "Cities") +
+  scale_color_manual(values = c("Los Angeles" = "red", "Miami" = "blue", "Atlanta" = "green", "Houston" = "purple", "Phoenix" = "orange")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("City Drug Crime Rating vs. Per Capita Income Ranking")
+```
+
