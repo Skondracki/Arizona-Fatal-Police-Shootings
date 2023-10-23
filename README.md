@@ -19,7 +19,7 @@ To enrich our analysis, we supplemented the dataset with information from police
    - Make sure you have R installed on your system. 
    
 2. Download the Dataset:
-   - Download the dataset `fatal-police-shootings-data.csv`. Place it in the directory where your R script file (`your_script.R`) is located.
+   - Download the dataset `fatal-police-shootings-data.csv`. Place it in the directory where your R script file is located.
 
 3. Running the R Script:
    - Open your preferred R environment (like RStudio or any other editor).
