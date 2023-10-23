@@ -14,6 +14,22 @@ To enrich our analysis, we supplemented the dataset with information from police
 - [PoliceInitiatives.org](https://policeinitiatives.org/)
 - [Crimegrade.org](https://crimegrade.org/drug-crimes-arizona/)
 
+## How to Run the Code
+1. Prerequisites:
+   - Make sure you have R installed on your system. 
+   
+2. Download the Dataset:
+   - Download the dataset `fatal-police-shootings-data.csv`. Place it in the directory where your R script file (`your_script.R`) is located.
+
+3. Running the R Script:
+   - Open your preferred R environment (like RStudio or any other editor).
+   - Open the R script file in the R environment.
+   - Select the code chunks and use the run button to execute the selected code.
+
+4. Understanding the Script:
+   - The script is divided into sections, each starting with `##` comments which indicate the purpose of that section.
+   - Some parts of the code might be dependent on earlier parts being executed. Ensure you run them in order.
+
 ## Features & Technologies
 
 ### Included Data Processing
